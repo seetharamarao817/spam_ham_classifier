@@ -13,7 +13,7 @@ def get_requirements(file_path:str)->List[str]:
             requirements.remove(hypen)
     return requirements
 setup(
-    name ='spamproject',
+    name ='spamp_ham_project',
     version = '0.0.1',
     author = 'seetha',
     author_email = 'akashay8179@gmail.com',
