@@ -12,6 +12,7 @@ from src.utils.utils import save_object,evaluate_model
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn import svm
+
 @dataclass 
 class ModelTrainerConfig:
     trained_model_file_path = os.path.join('artifacts','model.pkl')
