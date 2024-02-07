@@ -4,8 +4,13 @@ import mlflow
 from mlflow.tracking import MlflowClient
 from mlflow.entities import ViewType
 from mlflow.utils.mlflow_tags import MLFLOW_RUN_NAME
-from src.exception.py import CustomException
-from src.componets import ModelTrainer
+import numpy as np
+from src.exception import CustomException
+from src.components.model_trainer import ModelTrainer
+from src.components.data_ingestion import DataIngestion
+from src.components.data_preprocessing import DataPreprocessing
+from src.components.data_transformation import DataTransformer
+
 
 class TrainingPipeline:
     def __init__(self, file_path):
@@ -38,11 +43,11 @@ class TrainingPipeline:
                 # Log run name to MLflow
                 client = MlflowClient()
                 client.set_tag(run.info.run_id, MLFLOW_RUN_NAME, "Training Pipeline")
+                mlflow.end_run()
 
-        except CustomException as ce:
-            print("Custom Exception: {}".format(ce))
-        except Exception as e:
-            print("Unexpected error: {}".format(e))
+        except Exception as ce:
+            raise CustomException(ce,sys)
+        
 
     def data_ingestion(self):
         try:
@@ -50,54 +55,40 @@ class TrainingPipeline:
             data_ingestion = DataIngestion(self.file_path)
             self.dataset = data_ingestion.read_dataset()
             data_ingestion.display_dataset_info()
-        except CustomException as ce:
-            raise ce
-        except Exception as e:
-            raise CustomException(e, sys)
+        except Exception as ce:
+            raise CustomException(ce, sys)
 
     def data_preprocessing(self):
         try:
             logging.info("Data Preprocessing")
             data_preprocessing = DataPreprocessing(self.dataset)
-            data_preprocessing.separate_features()
+            self.y = data_preprocessing.separate_features()
             self.corpus = data_preprocessing.apply_stemming_and_lemmatization()
-            logging.info("Length of the corpus after preprocessing: {}".format(self.corpus))
-        except CustomException as ce:
-            raise ce
-        except Exception as e:
-            raise CustomException(e, sys)
+            logging.info("Length of the corpus after preprocessing: {}".format(len(self.corpus)))
+        except Exception as ce:
+            raise CustomException(ce, sys)
 
     def data_transformation(self):
         try:
             logging.info("Data Transformation")
             data_transformer = DataTransformer(self.corpus, self.y)
-            data_transformer.transform_data()
-            self.X_train = data_transformer.X_train
-            self.X_test = data_transformer.X_test
-            self.y_train = data_transformer.y_train
-            self.y_test = data_transformer.y_test
-        except CustomException as ce:
-            raise ce
+            self.X_train, self.X_test, self.y_train, self.y_test= data_transformer.transform_data()
+        
         except Exception as e:
             raise CustomException(e, sys)
 
     def model_training(self):
         try:
             logging.info("Model Training")
-            self.model_trainer.initate_model_training(
-                np.column_stack((self.X_train, self.y_train)),
-                np.column_stack((self.X_test, self.y_test))
-            )
-        except CustomException as ce:
-            raise ce
+            self.model_trainer.initate_model_training(self.X_train, self.y_train,self.X_test, self.y_test)
+        
         except Exception as e:
             raise CustomException(e, sys)
 
 # Example usage:
 try:
-    pipeline = TrainingPipeline(r"C:\Users\DELL\Downloads\sms+spam+collection\SMSSpamCollection")
+    pipeline = TrainingPipeline(r"/workspaces/spam_ham_classifier/data/SMSSpamCollection.txt")
     pipeline.run_pipeline()
-except CustomException as ce:
-    print("Custom Exception: {}".format(ce))
+
 except Exception as e:
-    print("Unexpected error: {}".format(e))
+    raise CustomException(e,sys)

@@ -5,8 +5,8 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from mlflow.tracking import MlflowClient
 from mlflow.entities import ViewType
 from mlflow.utils.mlflow_tags import MLFLOW_RUN_NAME
-from src.logger.logging import logging
-from src.exceptions.exception import customexception
+from src.logger import logging
+from src.exception import CustomException
 from src.utils.utils import save_object
 
 class ModelEvaluator:
@@ -33,9 +33,10 @@ class ModelEvaluator:
                     # Log run name to MLflow
                     client = MlflowClient()
                     client.set_tag(run.info.run_id, MLFLOW_RUN_NAME, f"Evaluation - {model_name}")
+                    mlflow.end_run()
 
             return report
 
         except Exception as e:
             logging.info('Exception occurred during model evaluation')
-            raise customexception(e, sys)
+            raise CustomException(e, sys)

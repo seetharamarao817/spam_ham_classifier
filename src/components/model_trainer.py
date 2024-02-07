@@ -5,9 +5,10 @@ import mlflow
 from mlflow.tracking import MlflowClient
 from mlflow.entities import ViewType
 from mlflow.utils.mlflow_tags import MLFLOW_RUN_NAME
-from src.logger.logging import logging
-from src.exceptions.exception import customexception
-from src.utils.utils import save_object, evaluate_model
+from src.logger import logging
+from src.exception import CustomException
+from src.utils.utils import save_object
+from src.components.model_evaluation import ModelEvaluator
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn import svm
@@ -22,15 +23,10 @@ class ModelTrainer:
     def __init__(self):
         self.model_trainer_config = ModelTrainerConfig()
 
-    def initate_model_training(self, train_array, test_array):
+    def initate_model_training(self,X_train, y_train, X_test, y_test):
         try:
             logging.info('Splitting Dependent and Independent variables from train and test data')
-            X_train, y_train, X_test, y_test = (
-                train_array[:,:-1],
-                train_array[:,-1],
-                test_array[:,:-1],
-                test_array[:,-1]
-            )
+    
 
             models = {
                 'GausianNB': GaussianNB(),
@@ -40,8 +36,8 @@ class ModelTrainer:
 
             with mlflow.start_run(run_name="Model Training") as run:
                 mlflow.log_params({"Train-Test Split": "75-25"})
-
-                model_report = evaluate_model(X_train, y_train, X_test, y_test, models)
+                eval = ModelEvaluator()
+                model_report = eval.evaluate_model(X_train, y_train, X_test, y_test, models)
                 mlflow.log_metrics(model_report)
 
                 best_model_score = max(sorted(model_report.values()))
@@ -56,6 +52,8 @@ class ModelTrainer:
                 client = MlflowClient()
                 client.set_tag(run.info.run_id, MLFLOW_RUN_NAME, "Model Training")
 
+                mlflow.end_run()
+
         except Exception as e:
             logging.info('Exception occurred at Model Training')
-            raise customexception(e,sys)
+            raise CustomException(e,sys)

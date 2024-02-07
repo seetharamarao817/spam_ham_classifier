@@ -1,5 +1,6 @@
 import pandas as pd
-import logging
+from src.logger import logging
+from src.exception import CustomException
 import sys
 import nltk
 from nltk.corpus import stopwords
@@ -21,6 +22,7 @@ class DataPreprocessing:
             self.labels = self.dataset['labels']
             self.messages = self.dataset['message']
             self.y = pd.get_dummies(self.labels).iloc[:, 1].values
+            return self.y
         except Exception as e:
             logging.error("Error occurred in data preprocessing part")
             raise CustomException(e, sys)
@@ -35,29 +37,12 @@ class DataPreprocessing:
                 text = re.sub('[^a-zA-Z1-9]', ' ', self.messages[i])
                 text = text.lower()
                 tokens = nltk.word_tokenize(text)
-                tokens = [lemmatizer.lemmatize(j) for j in tokens if j not in set(stopwords.words('English'))]
+                tokens = [lemmatizer.lemmatize(j) for j in tokens if j not in set(stopwords.words('english'))]
                 text = ' '.join(tokens)
                 self.corpus.append(text)
 
             logging.info("Data preprocessing completed")
-            return len(self.corpus)
+            return self.corpus
         except Exception as e:
             logging.error("Error occurred in data preprocessing part")
             raise CustomException(e, sys)
-
-# Define your custom exception class
-class CustomException(Exception):
-    def __init__(self, message, source):
-        super().__init__(message)
-        self.source = source
-
-# Example usage:
-try:
-    data_preprocessing = DataPreprocessing(ds)
-    data_preprocessing.separate_features()
-    corpus_length = data_preprocessing.apply_stemming_and_lemmatization()
-    logging.info("Length of the corpus after preprocessing: {}".format(corpus_length))
-except CustomException as ce:
-    print("Custom Exception: {}".format(ce))
-except Exception as e:
-    print("Unexpected error: {}".format(e))

@@ -1,6 +1,7 @@
 import pandas as pd
-import logging
+from src.logger import logging
 import sys
+from src.exception import CustomException
 
 class DataIngestion:
 
@@ -8,7 +9,7 @@ class DataIngestion:
         self.file_path = file_path
         self.dataset = None
 
-    def read_dataset(self)-> DataFrame:
+    def read_dataset(self):
         try:
             logging.info("Reading the dataset")
             self.dataset = pd.read_csv(self.file_path, sep='\t', names=['labels', 'message'])
@@ -29,18 +30,4 @@ class DataIngestion:
             logging.error("Error occurred while displaying dataset information")
             raise CustomException(e, sys)
 
-# Define your custom exception class
-class CustomException(Exception):
-    def __init__(self, message, source):
-        super().__init__(message)
-        self.source = source
 
-# Example usage:
-try:
-    data_ingestion = DataIngestion(r"C:\Users\DELL\Downloads\sms+spam+collection\SMSSpamCollection")
-    data_ingestion.read_dataset()
-    data_ingestion.display_dataset_info()
-except CustomException as ce:
-    print("Custom Exception: {}".format(ce))
-except Exception as e:
-    print("Unexpected error: {}".format(e))

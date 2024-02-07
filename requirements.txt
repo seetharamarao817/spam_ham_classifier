@@ -1,4 +1,7 @@
 pandas
 numpy 
-seaborn
+nltk
+scikit-learn
+mlflow
+
 -e .
