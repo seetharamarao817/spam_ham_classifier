@@ -11,6 +11,8 @@ from src.components.data_ingestion import DataIngestion
 from src.components.data_preprocessing import DataPreprocessing
 from src.components.data_transformation import DataTransformer
 
+if mlflow.active_run():
+    mlflow.end_run()
 
 class TrainingPipeline:
     def __init__(self, file_path):
@@ -27,7 +29,7 @@ class TrainingPipeline:
     def run_pipeline(self):
         try:
             # Start MLflow run
-            with mlflow.start_run(run_name="Training Pipeline") as run:
+            with mlflow.start_run(run_name="Training Pipeline",nested=True) as run:
                 # Data Ingestion
                 self.data_ingestion()
                 
@@ -38,15 +40,16 @@ class TrainingPipeline:
                 self.data_transformation()
                 
                 # Model Training
-                self.model_training()
+                self.model_training(run)
 
                 # Log run name to MLflow
                 client = MlflowClient()
                 client.set_tag(run.info.run_id, MLFLOW_RUN_NAME, "Training Pipeline")
-                mlflow.end_run()
-
         except Exception as ce:
             raise CustomException(ce,sys)
+        finally:
+        # End the MLflow run even if an exception occurs
+            mlflow.end_run()
         
 
     def data_ingestion(self):
@@ -77,10 +80,11 @@ class TrainingPipeline:
         except Exception as e:
             raise CustomException(e, sys)
 
-    def model_training(self):
+    def model_training(self, run):
         try:
             logging.info("Model Training")
-            self.model_trainer.initate_model_training(self.X_train, self.y_train,self.X_test, self.y_test)
+            # Pass the active MLflow run to initiate_model_training
+            self.model_trainer.initate_model_training(self.X_train, self.y_train,self.X_test, self.y_test, run)
         
         except Exception as e:
             raise CustomException(e, sys)
