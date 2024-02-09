@@ -34,7 +34,7 @@ class DataPreprocessing:
             lemmatizer = WordNetLemmatizer()
 
             for i in range(len(self.messages)):
-                text = re.sub('[^a-zA-Z1-9]', ' ', self.messages[i])
+                text = re.sub('[^a-zA-Z0-9]', ' ', self.messages[i])
                 text = text.lower()
                 tokens = nltk.word_tokenize(text)
                 tokens = [lemmatizer.lemmatize(j) for j in tokens if j not in set(stopwords.words('english'))]

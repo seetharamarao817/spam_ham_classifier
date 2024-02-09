@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from src.logger import logging
 from src.exception import CustomException
+import joblib
 
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
@@ -27,5 +28,12 @@ def load_object(file_path):
     except Exception as e:
         logging.info('Exception Occured in load_object function utils')
         raise CustomException(e,sys)
+    
+def load_tfidf_vectorizer(path):
+        try:
+            tfidf_vectorizer = joblib.load(path)
+            return tfidf_vectorizer
+        except Exception as e:
+            raise CustomException(e, sys)
 
     
